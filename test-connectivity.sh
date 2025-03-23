@@ -1,5 +1,6 @@
 #!/bin/bash
 # Description: Test network connectivity between services in the cluster
+
 function test_connectivity() {
     local source=$1
     local target=$2
@@ -15,6 +16,8 @@ function test_connectivity() {
         else
             echo -e "$(tput setaf 1)$source--> $target.$trgNamespace.svc.cluster.local: $result$(tput sgr0)"
         fi
+    else
+        echo -e "$(tput setaf 1)$source--> $target.$trgNamespace.svc.cluster.local: Connection failed$(tput sgr0)"
     fi
 
     local dns_result=$(kubectl -n $srcNamespace exec deployments/$source -- nslookup -timeout=2 $target.$trgNamespace.svc.cluster.local)
@@ -31,59 +34,48 @@ function test_connectivity() {
     fi
 }
 
+function run_tests() {
+    local services=("$@")
+    for source in "${services[@]}"; do
+        for target in "${services[@]}"; do
+            local srcNamespace=$(detect_namespace $source)
+            local trgNamespace=$(detect_namespace $target)
+            test_connectivity $source $target $srcNamespace $trgNamespace &
+        done
+    done
+    wait
+}
+
+function detect_namespace() {
+    local service=$1
+    if [[ "$service" == data-* || "$service" == processor-* ]]; then
+        echo "data"
+    else
+        echo "app"
+    fi
+}
+
+function run_dns_tests() {
+    local services=("$@")
+    for source in "${services[@]}"; do
+        local srcNamespace=$(detect_namespace $source)
+        test_connectivity $source kube-dns $srcNamespace kube-system &
+    done
+    wait
+}
+
 echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
 echo -e "$(tput setaf 4)connectivity and DNS should work$(tput sgr0)"
 echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
 
 services=("app1" "app2" "manager1" "manager2" "data-001" "data-002" "processor-a100" "processor-a200")
-
-for source in "${services[@]}"; do
-    for target in "${services[@]}"; do
-        if [[ "$source" == data-* || "$source" == processor-* ]]; then
-            srcNamespace="data"
-        else
-            srcNamespace="app"
-        fi
-
-        if [[ "$target" == data-* || "$target" == processor-* ]]; then
-            trgNamespace="data"
-        else
-            trgNamespace="app"
-        fi
-
-        test_connectivity $source $target $srcNamespace $trgNamespace &
-    done
-done
-wait
+run_tests "${services[@]}"
 
 echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
 echo -e "$(tput setaf 4)connectivity should fail but DNS should work$(tput sgr0)"
 echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
 
-for source in "${services[@]}"; do
-
-    if [[ "$source" == data-* || "$source" == processor-* ]]; then
-        srcNamespace="data"
-    else
-        srcNamespace="app"
-    fi
-    test_connectivity $source kube-dns $srcNamespace kube-system &
-done
-wait
-
-echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
-echo -e "$(tput setaf 4)connectivity should fail but DNS should work$(tput sgr0)"
-echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
-
-for source in "${services[@]}"; do
-    if [[ "$source" == data-* || "$source" == processor-* ]]; then
-        srcNamespace="data"
-    else
-        srcNamespace="app"
-    fi
-    test_connectivity $source kube-dns $srcNamespace kube-system &
-done
-wait
+run_dns_tests "${services[@]}"
 
 echo -e "$(tput setaf 4)=================================================================================$(tput sgr0)"
 echo -e "$(tput setaf 4)connectivity and DNS should fail$(tput sgr0)"
