@@ -20,4 +20,6 @@ helm upgrade --install cilium cilium/cilium \
     --set ipv4NativeRoutingCIDR=10.0.0.0/8 \
     --set clustermesh.enableEndpointSliceSynchronization=true \
     --wait
+
+cilium status --wait
 echo "✅ Cilium installation complete"

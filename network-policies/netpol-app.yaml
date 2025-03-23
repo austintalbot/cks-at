@@ -29,7 +29,9 @@ spec:
   - Egress # Specifies that this policy applies to egress traffic
   egress:
   - to:
-    - namespaceSelector: {} # Allows egress traffic to any namespace
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP # Specifies the protocol as UDP
       port: 53 # Allows egress traffic on port 53 (DNS)
