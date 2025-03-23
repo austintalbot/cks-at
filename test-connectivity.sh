@@ -8,9 +8,9 @@ function test_connectivity() {
     echo "testing $source --> $target.$target_namespace.svc.cluster.local"
     local result=$(kubecolor -n $namespace exec deployments/$source -- wget -qSO- --timeout=1 $target.$target_namespace.svc.cluster.local 2>&1 | grep "HTTP/" | awk '{print $2}')
     if [ "$result" == "200" ]; then
-        echo -e "\e[32m$source--> $target.$target_namespace.svc.cluster.local: $result\e[0m" | column -t
+        echo -e "$(tput setaf 2)$source--> $target.$target_namespace.svc.cluster.local: $result$(tput sgr0)" | column -t
     else
-        echo -e "\e[31m$source--> $target.$target_namespace.svc.cluster.local: $result\e[0m" | column -t
+        echo -e "$(tput setaf 1)$source--> $target.$target_namespace.svc.cluster.local: $result$(tput sgr0)" | column -t
     fi
 }
 

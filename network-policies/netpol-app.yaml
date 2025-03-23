@@ -29,9 +29,7 @@ spec:
   - Egress
   egress:
   - to:
-    - namespaceSelector:
-        matchLabels:
-          name: kube-system
+    - namespaceSelector: {}
     ports:
     - protocol: UDP
       port: 53
@@ -41,13 +39,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: deny-all-egress
+  name: deny-all
   namespace: app
 spec:
   podSelector: {}
-  policyTypes:
-  - Egress
-  egress: []
 ---
 
 apiVersion: networking.k8s.io/v1
