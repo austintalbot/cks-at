@@ -1,13 +1,13 @@
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1 # Specifies the API version
+kind: NetworkPolicy # Defines the kind of resource, which is a NetworkPolicy
 metadata:
-  name: allow-app-namespace-ingress
-  namespace: app
+  name: allow-ingress-from-app-and-data # Name of the NetworkPolicy
+  namespace: app # Namespace where the NetworkPolicy is applied
 spec:
-  podSelector: {}
+  podSelector: {} # Selects all pods in the namespace
   policyTypes:
-  - Ingress
+  - Ingress # Specifies that this policy applies to ingress traffic
   ingress:
   - from:
     - namespaceSelector:
@@ -15,45 +15,45 @@ spec:
         - key: kubernetes.io/metadata.name
           operator: In
           values:
-          - data
-          - app
+          - data # Allows ingress traffic from the 'data' namespace
+          - app # Allows ingress traffic from the 'app' namespace
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1 # Specifies the API version
+kind: NetworkPolicy # Defines the kind of resource, which is a NetworkPolicy
 metadata:
-  name: allow-dns
-  namespace: app
+  name: allow-dns-egress # Name of the NetworkPolicy
+  namespace: app # Namespace where the NetworkPolicy is applied
 spec:
-  podSelector: {}
+  podSelector: {} # Selects all pods in the namespace
   policyTypes:
-  - Egress
+  - Egress # Specifies that this policy applies to egress traffic
   egress:
   - to:
-    - namespaceSelector: {}
+    - namespaceSelector: {} # Allows egress traffic to any namespace
     ports:
-    - protocol: UDP
-      port: 53
-    - protocol: TCP
-      port: 53
+    - protocol: UDP # Specifies the protocol as UDP
+      port: 53 # Allows egress traffic on port 53 (DNS)
+    - protocol: TCP # Specifies the protocol as TCP
+      port: 53 # Allows egress traffic on port 53 (DNS)
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1 # Specifies the API version
+kind: NetworkPolicy # Defines the kind of resource, which is a NetworkPolicy
 metadata:
-  name: deny-all
-  namespace: app
+  name: deny-all-traffic # Name of the NetworkPolicy
+  namespace: app # Namespace where the NetworkPolicy is applied
 spec:
-  podSelector: {}
+  podSelector: {} # Selects all pods in the namespace
+  # No policyTypes or rules specified, effectively denying all traffic
 ---
-
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1 # Specifies the API version
+kind: NetworkPolicy # Defines the kind of resource, which is a NetworkPolicy
 metadata:
-  name: allow-app-to-data
-  namespace: app
+  name: allow-egress-to-app-and-data # Name of the NetworkPolicy
+  namespace: app # Namespace where the NetworkPolicy is applied
 spec:
-  podSelector: {}
+  podSelector: {} # Selects all pods in the namespace
   policyTypes:
-  - Egress
+  - Egress # Specifies that this policy applies to egress traffic
   egress:
   - to:
     - namespaceSelector:
@@ -61,5 +61,5 @@ spec:
         - key: kubernetes.io/metadata.name
           operator: In
           values:
-          - data
-          - app
+          - data # Allows egress traffic to the 'data' namespace
+          - app # Allows egress traffic to the 'app' namespace
