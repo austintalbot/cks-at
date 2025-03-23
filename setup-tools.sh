@@ -2,6 +2,14 @@
 
 echo "install kubecolor"
 
+# if running on my mac exit because this is already setup
+
+OS="$(uname | tr '[:upper:]' '[:lower:]')"
+if [[ "$OS" == "darwin"* ]]; then
+    echo "macOS detected, skipping kubecolor installation"
+    exit 0
+fi
+
 wget https://github.com/kubecolor/kubecolor/releases/download/v0.5.0/kubecolor_0.5.0_linux_amd64.tar.gz
 tar -xvf kubecolor_0.5.0_linux_amd64.tar.gz
 chmod +x kubecolor
