@@ -5,12 +5,13 @@
 
 
 # gvisor
-sudo apt-get update && \
-sudo apt-get install -y \
+ apt-get update && \
+ apt-get install -y \
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg-agent \
+    wget \
     software-properties-common
 
 
@@ -26,9 +27,13 @@ sudo apt-get install -y \
     -c containerd-shim-runsc-v1.sha512
   rm -f *.sha512
   chmod a+rx runsc containerd-shim-runsc-v1
-  sudo mv runsc containerd-shim-runsc-v1 /usr/local/bin
+   mv runsc containerd-shim-runsc-v1 /usr/local/bin
 )
 
+echo "taking a backup of the containerd config"
+ cp -v /etc/containerd/config.toml ~/config.toml.bak
+
+echo "enabling runsc in containerd"
 
 # containerd enable runsc
 cat > /etc/containerd/config.toml <<EOF
@@ -66,4 +71,7 @@ version = 2
         SystemdCgroup = true
 EOF
 
+echo "restarting containerd"
 systemctl restart containerd
+echo "gvisor installed"
+echo "runsc --version"
