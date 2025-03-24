@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1 # Specifies the API version
+kind: NetworkPolicy # Indicates that this is a NetworkPolicy resource
+metadata:
+  name: backend # Name of the NetworkPolicy
+  namespace: default # Namespace in which the NetworkPolicy is applied
+spec:
+  podSelector:
+    matchLabels:
+      app: backend # Selects pods with the label 'app: backend'
+  policyTypes:
+  - Egress # Applies to outgoing traffic
+  - Ingress # Applies to incoming traffic
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend # Allows incoming traffic from pods with the label 'app: frontend'
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: frontend # Allows outgoing traffic to pods with the label 'app: frontend'
+
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system # Allows outgoing traffic to pods in the 'kube-system' namespace
+    ports:
+    - protocol: TCP # Allows outgoing TCP traffic on port 53
+      port: 53
+    - protocol: UDP # Allows outgoing UDP traffic on port 53
+      port: 53
+    - protocol: TCP # Allows outgoing TCP traffic on port 80
+      port: 80
