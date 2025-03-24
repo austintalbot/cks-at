@@ -15,3 +15,16 @@ k exec deployments/backend -- curl frontend -m 1
 # create a default deny network policy and apply it
 
 ```
+
+``` bash
+k delete deployment frontend
+k delete deployment backend
+
+k delete svc frontend
+k delete svc backend
+
+k delete -f default-deny.yaml
+k delete -f frontend-np.yaml
+k delete -f backend-np.yaml
+
+```
