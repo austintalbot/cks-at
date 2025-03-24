@@ -8,7 +8,6 @@ metadata:
   namespace: default
   uid: 6d3ce207-fbcf-44ea-8b13-45f61440d7d2
 spec:
-  nodeName: test-control-plane
   runtimeClassName: gvisor
   containers:
   - args:

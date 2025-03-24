@@ -48,6 +48,7 @@ version = 2
 [plugins]
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
     runtime_type = "io.containerd.runsc.v1"
+
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
       base_runtime_spec = ""
