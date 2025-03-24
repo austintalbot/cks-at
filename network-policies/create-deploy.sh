@@ -33,3 +33,5 @@ echo
 echo Pods in Namespace data
 kubecolor -n data get pod -o wide --show-labels | sed 's/NOMINATED NODE/NOMINATED_NODE/g' | sed 's/READINESS GATES/READINESS_GATES/g' | awk '{print $1,$3,$5,$6,$10}' | column -t
 
+kubecolor apply -f netpol-app.yaml
+kubecolor apply -f netpol-data.yaml
