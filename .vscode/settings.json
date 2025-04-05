@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "apiserver",
         "clustermesh",
         "crictl",
         "Criu",
@@ -9,8 +10,10 @@
         "KREW",
         "netpol",
         "nftables",
+        "nologin",
         "runsc",
         "setaf",
+        "ubelet",
         "zxvf"
     ]
 }
