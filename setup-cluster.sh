@@ -29,3 +29,10 @@ helm upgrade --install cilium cilium/cilium \
 
 cilium status 
 echo "✅ Cilium installation complete"
+
+echo "running the setup script on each node"
+for node in $(kind get nodes --name "$NAME"); do
+    echo "Running setup script on $node"
+    docker cp set_etcd_and_kube_bench.sh "$node":/root/
+    docker exec -it "$node" bash /root/set_etcd_and_kube_bench.sh
+done

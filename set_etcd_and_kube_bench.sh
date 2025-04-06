@@ -132,8 +132,8 @@ setup_etcd_user_and_group() {
 # Function to run kube-bench checks
 run_kube_bench_checks() {
   echo "Running kube-bench checks..."
-  kube-bench run --targets=master --nosummary --version $KUBERNETES_VERSION
-  kube-bench run --targets=master | grep -i fail || echo "No failures found."
+  kube-bench run  --nosummary --version $KUBERNETES_VERSION
+  kube-bench run  | grep -i fail || echo "No failures found."
   for check in 1.2.5 1.2.16 1.2.17 1.2.18 1.2.19; do
     kube-bench run --check "$check" --nosummary --version $KUBERNETES_VERSION
   done
@@ -170,7 +170,7 @@ main() {
   source ~/.bashrc
   env | sort
   pushd /etc/kubernetes/manifests
-  kube-bench run --targets=master --version 1.32
+  kube-bench run  --version 1.32
   popd
 
 }

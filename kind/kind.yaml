@@ -9,7 +9,7 @@ networking:
   kubeProxyMode: "nftables"
 
 nodes:
-# one node hosting a control plane
+# one node hosting a control plane https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/
 - role: control-plane
   kubeadmConfigPatches:
   - |
