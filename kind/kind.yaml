@@ -9,13 +9,14 @@ networking:
   kubeProxyMode: "nftables"
 
 nodes:
-# one node hosting a control plane
+# one node hosting a control plane https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/
 - role: control-plane
   kubeadmConfigPatches:
   - |
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
+        # kube-bench extra args
         profiling: "false"
         audit-log-path: "/var/log/apiserver/audit.log"
         kubelet-certificate-authority: "/etc/kubernetes/pki/ca.crt"
