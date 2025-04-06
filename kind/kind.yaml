@@ -19,7 +19,7 @@ nodes:
         # kube-bench extra args
         profiling: "false"
         audit-log-path: "/var/log/apiserver/audit.log"
-        kubelet-certificate-authority: "/etc/kubernetes/pki/ca.crt"
+        # kubelet-certificate-authority: "/etc/kubernetes/pki/ca.crt"
         audit-log-maxage: "30"
         audit-log-maxbackup: "10"
         audit-log-maxsize: "100"
