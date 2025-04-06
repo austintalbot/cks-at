@@ -8,7 +8,7 @@ fi
 
 echo "🔄 Creating Kind cluster '$NAME'..."
 if ! kind get clusters | grep -q "$NAME"; then
-    kind create cluster --name "$NAME" --config ./kind/kind.config
+    kind create cluster --name "$NAME" --config ./kind/kind.yaml
     echo "✅ Cluster '$NAME' created successfully"
 else
     echo "ℹ️  Cluster '$NAME' already exists, skipping creation"

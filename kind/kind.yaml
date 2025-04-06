@@ -16,6 +16,7 @@ nodes:
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
+        # kube-bench extra args
         profiling: "false"
         audit-log-path: "/var/log/apiserver/audit.log"
         kubelet-certificate-authority: "/etc/kubernetes/pki/ca.crt"
