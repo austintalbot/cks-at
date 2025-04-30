@@ -1,0 +1,152 @@
+#
+# This script is intended to be run on a single Ubuntu 20.04,
+# 2cpu, 8G node to ensure the gVisor runtime can be used.
+# By Tim Serewicz, 03/2022 GPL
+
+# Note there is a lot of software downloaded, which may require
+# some troubleshooting if any of the sites updates their code,
+# which should be expected.
+
+# Let us update and upgrade the packages
+
+sudo apt-get update && sudo apt-get upgrade -y
+
+# Ensure two modules are loaded after reboot
+
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+
+# Disable swap if not on a cloud instance - done anyway
+
+sudo swapoff -a
+
+
+# Load the modules now
+
+sudo modprobe overlay
+
+sudo modprobe br_netfilter
+
+
+# Update sysctl to load iptables and ipforwarding
+
+cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+sudo sysctl --system
+
+#
+# Install some necessary software
+
+sudo apt-get install curl apt-transport-https vim git wget  software-properties-common lsb-release ca-certificates socat  -y
+
+# Install and configure containerd
+
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update &&  sudo apt-get install containerd.io
+sudo containerd config default | sudo tee /etc/containerd/config.toml
+sudo systemctl daemon-reload
+sudo systemctl enable --now containerd
+
+sudo systemctl restart containerd
+
+
+# Add the Kubernetes repo
+
+sudo mkdir -m 755 -p /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+
+
+# Install the Kubernetes packages
+
+sudo apt-get update
+
+sudo apt-get install -y kubeadm=1.32.1-1.1 kubelet=1.32.1-1.1 kubectl=1.32.1-1.1
+
+sudo apt-mark hold kubelet kubeadm kubectl
+
+
+
+# Create a cluster using containerd
+
+sudo kubeadm init  --pod-network-cidr 192.168.0.0/16 | sudo tee /var/log/kubeinit.log
+
+mkdir -p $HOME/.kube
+
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+
+# We'll use Calico for the network plugin
+
+#kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/refs/heads/release-v3.29/manifests/calico.yaml
+
+
+
+# Make sure all the infrastructure pods are running
+
+kubectl get pod --all-namespaces
+
+kubectl describe pod -l component=kube-apiserver -n kube-system
+
+
+kubectl get events
+
+# Enable command line completion
+source <(kubectl completion bash)
+
+echo "source <(kubectl completion bash)" >> $HOME/.bashrc
+
+# Untaint the control plane, as we only have one node
+kubectl taint node --all node-role.kubernetes.io/control-plane:NoSchedule-
+
+
+
+cat <<EOF | sudo tee /etc/crictl.yaml
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 5
+debug: false
+EOF
+
+# Get containerd running, append or create several files.
+sudo cat <<EOF | sudo tee /etc/containerd/config.toml
+version = 2
+[plugins."io.containerd.runtime.v1.linux"]
+ shim_debug = true
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+ runtime_type = "io.containerd.runc.v2"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
+ runtime_type = "io.containerd.runsc.v1"
+EOF
+
+
+sudo systemctl daemon-reload
+sudo systemctl restart containerd
+
+
+sudo wget https://storage.googleapis.com/gvisor/releases/nightly/latest/containerd-shim-runsc-v1 -O /usr/local/bin/containerd-shim-runsc-v1
+sudo chmod +x /usr/local/bin/containerd-shim-runsc-v1
+
+sudo wget https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc -O /usr/local/bin/runsc
+sudo chmod +x /usr/local/bin/runsc
+
+# Ready to create the runtimeclass and the gVisor pod
+
